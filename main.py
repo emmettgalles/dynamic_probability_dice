@@ -9,6 +9,7 @@ import copy, random
 import numpy as np
 import matplotlib.pyplot as plt
 from IPython import get_ipython
+from additional_functions import merge
 
 ## === INITIATING VARIABLES ===
 # Create the dice (just a list with possible rolls)
@@ -46,12 +47,13 @@ for i in range(72):
     scaled_dist = np.divide(actual_dist, fixed_prob)
     # We now find the index (or indices) of the limiting value(s). If we have more than one, we will select one at random.
     limiting_value_index = random.choice([i for i, x in enumerate(scaled_dist) if x == max(scaled_dist)])
-    # We now scale fixed_prob by the largest number of scaled_dist. When we do this, we create the statistically accurate distribution that would result in the limiting value's number of rolls occuring. Once this is done, then we need to add another distribution, this other distribution being a scaled version of fixed_prob so that our limiting value is equal to one. This allows the probability of the next roll to have a nonzero chance of rolling the limiting value.
+    # We now scale fixed_prob by the largest number of scaled_dist. When we do this, we create the statistically accurate distribution that would result in the limiting value's number of rolls occuring. Once this is done, then we need to add another distribution, this other distribution being just fixed_prob to introduce more variability. This allows the probability of the next roll to have a nonzero chance of rolling the limiting value. Think about this extra added fixed_prob as increasing the interia of the adaptivity of the dice, it allows for nonzero probabilities of all rolls while still moving the adaptive probability toward the theoretical distribution.
     #
     # First scale fixed_prob by the largest number of scaled_dist
     scaled_prob = [scaled_dist[limiting_value_index] * a for a in fixed_prob]
     # Now create the additional roll distribution to add on
-    additional_dist = [1 / fixed_prob[limiting_value_index] * b for b in fixed_prob]
+    # additional_dist = [1 / fixed_prob[limiting_value_index] * b for b in fixed_prob]
+    additional_dist = fixed_prob
     # Now sum them together
     scaled_prob_additional = np.add(scaled_prob, additional_dist)
     # We now subtract off previous rolls
@@ -62,14 +64,32 @@ for i in range(72):
     ## === PLOTTING ===
     # Let's try to visualize what's going on. We're gonna plot the fixed probability as a bar chart, then next to it we'll have the actual distribution, then next to THAT we'll have the adaptive probability
     #
+    # Create normalized actual_dist
+    actual_dist_normal = [d / sum(actual_dist) for d in actual_dist]
+    # What we're first going to do is figure out which values of the normalized actual_dist are greater or lower than the values of fixed_prob. We will merge these two lists into a list of tuples
+    actual_dist_merge = merge(fixed_prob, actual_dist_normal)
+    # Now make a list of green and red, green meaning that actual_dist_normal > fixed_prob and red for the converse
+    colors_actual_dist = ['green' if a < b else 'red' for (a,b) in actual_dist_merge]
+    # We'll do the same merging and comparison analysis for the adaptive probability
+    adaptive_prob_merge = merge(fixed_prob, adaptive_prob)
+    colors_adaptive_prob = ['green' if a < b else 'red' for (a,b) in adaptive_prob_merge]
     # Pop out the plot
     get_ipython().run_line_magic('matplotlib', 'qt')
     # Plot the fixed probability
     plt.subplot(1, 3, 1)
     plt.bar(dice, fixed_prob)
+    plt.xticks(dice)
     # Now the actual distribution
     plt.subplot(1, 3, 2)
-    plt.bar(dice, [d / sum(actual_dist) for d in actual_dist])
+    plt.bar(dice, actual_dist_normal, color = colors_actual_dist)
+    plt.xticks(dice)
     # Now the adaptive probability
     plt.subplot(1, 3, 3)
-    plt.bar(dice, adaptive_prob)
+    plt.bar(dice, adaptive_prob, color = colors_adaptive_prob)
+    plt.xticks(dice)
+
+
+
+
+
+
