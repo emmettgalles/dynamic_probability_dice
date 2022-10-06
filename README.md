@@ -1,4 +1,4 @@
-# Dynamic probability dice
+# Statistically dependent dice
 
 This repository is designed to house information related to my attempt at writing code to create a method of rolling dice that will dynamically change its outcome probability to match the theoretical distribution. This is an active repository. I will post information about the files below, so please reference this markdown first if an issue or concern arises.
 
