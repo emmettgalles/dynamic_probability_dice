@@ -9,7 +9,7 @@ import copy, random
 import numpy as np
 import matplotlib.pyplot as plt
 from IPython import get_ipython
-from additional_functions import merge
+from additional_functions import merge, roll_dice
 
 ## === INITIATING VARIABLES ===
 # Create the dice (just a list with possible rolls)
@@ -26,11 +26,14 @@ dynamic_prob = copy.copy(target_dist)
 rolls = []
 # We need to preallocate the adaptive probability
 adaptive_prob = []
+# Create a rolls and distribution tracker for the theoretical dice
+actual_dist_theo = copy.copy(target_dist)
+rolls_theo = []
 
 ## === ROLLING THE DICE ===
 # *** iteration can be done here ***
 # Set number of roles here (which will be the number we put in range)
-for i in range(72):
+for i in range(80):
     if i == 0:  # First roll
         # Roll the dice, or in other words, choose a random number from dice with the probability given by fixed_prob
         roll = (random.choices(dice, weights=fixed_prob, k=1))
@@ -61,34 +64,65 @@ for i in range(72):
     # Now we normalize everything so it's nice to read
     adaptive_prob = [c / sum(adaptive_scaled_prob_additional) for c in adaptive_scaled_prob_additional]
     
-    ## === PLOTTING ===
-    # Let's try to visualize what's going on. We're gonna plot the fixed probability as a bar chart, then next to it we'll have the actual distribution, then next to THAT we'll have the adaptive probability
+    ## === ROLLING BASIC DICE ===
+    # We're also going to roll basic dice so we can compare distributions. To do this, we will use our function in additional_functions
     #
-    # Create normalized actual_dist
-    actual_dist_normal = [d / sum(actual_dist) for d in actual_dist]
-    # What we're first going to do is figure out which values of the normalized actual_dist are greater or lower than the values of fixed_prob. We will merge these two lists into a list of tuples
-    actual_dist_merge = merge(fixed_prob, actual_dist_normal)
-    # Now make a list of green and red, green meaning that actual_dist_normal > fixed_prob and red for the converse
-    colors_actual_dist = ['green' if a < b else 'red' for (a,b) in actual_dist_merge]
-    # We'll do the same merging and comparison analysis for the adaptive probability
-    adaptive_prob_merge = merge(fixed_prob, adaptive_prob)
-    colors_adaptive_prob = ['green' if a < b else 'red' for (a,b) in adaptive_prob_merge]
-    # Pop out the plot
-    get_ipython().run_line_magic('matplotlib', 'qt')
-    # Plot the fixed probability
-    plt.subplot(1, 3, 1)
-    plt.bar(dice, fixed_prob)
-    plt.xticks(dice)
-    # Now the actual distribution
-    plt.subplot(1, 3, 2)
-    plt.bar(dice, actual_dist_normal, color = colors_actual_dist)
-    plt.xticks(dice)
-    # Now the adaptive probability
-    plt.subplot(1, 3, 3)
-    plt.bar(dice, adaptive_prob, color = colors_adaptive_prob)
-    plt.xticks(dice)
+    # Roll the dice
+    roll_theo = roll_dice(fixed_prob)
+    # Now put the result in the theoretical variables
+    rolls_theo += roll_theo
+    actual_dist_theo[roll_theo[0]-2] += 1
+    
+    # ## === TRACKING ADAPTIVITY WITH PLOTS ===
+    # # Let's try to visualize what's going on. We're gonna plot the fixed probability as a bar chart, then next to it we'll have the actual distribution, then next to THAT we'll have the adaptive probability
+    # #
+    # # Create normalized actual_dist
+    # actual_dist_normal = [d / sum(actual_dist) for d in actual_dist]
+    # # What we're first going to do is figure out which values of the normalized actual_dist are greater or lower than the values of fixed_prob. We will merge these two lists into a list of tuples
+    # actual_dist_merge = merge(fixed_prob, actual_dist_normal)
+    # # Now make a list of green and red, green meaning that actual_dist_normal > fixed_prob and red for the converse
+    # colors_actual_dist = ['green' if a < b else 'red' for (a,b) in actual_dist_merge]
+    # # We'll do the same merging and comparison analysis for the adaptive probability
+    # adaptive_prob_merge = merge(fixed_prob, adaptive_prob)
+    # colors_adaptive_prob = ['green' if a < b else 'red' for (a,b) in adaptive_prob_merge]
+    # # Pop out the plot
+    # get_ipython().run_line_magic('matplotlib', 'qt')
+    # # Plot the fixed probability
+    # plt.subplot(1, 3, 1)
+    # plt.bar(dice, fixed_prob)
+    # plt.xticks(dice)
+    # # Now the actual distribution
+    # plt.subplot(1, 3, 2)
+    # plt.bar(dice, actual_dist_normal, color = colors_actual_dist)
+    # plt.xticks(dice)
+    # # Now the adaptive probability
+    # plt.subplot(1, 3, 3)
+    # plt.bar(dice, adaptive_prob, color = colors_adaptive_prob)
+    # plt.xticks(dice)
 
-
+## === COMPARING ADAPTIVE DICE WITH FIXED DICE ===
+# We will now plot our results comparing the theoretical distribution with the adaptive dice as well as fixed probability dice
+# Create normalized actual_dist
+actual_dist_normal = [d / sum(actual_dist) for d in actual_dist]
+# Create normalized actual_dist_theo
+actual_dist_theo_normal = [d / sum(actual_dist_theo) for d in actual_dist_theo]
+# Pop out the plot
+get_ipython().run_line_magic('matplotlib', 'qt')
+# Plot the theoretical distribution
+plt.subplot(1, 3, 1)
+plt.bar(dice, fixed_prob)
+plt.title("Theoretical Distribution")
+plt.xticks(dice)
+# Now the adaptive probability distribution
+plt.subplot(1, 3, 2)
+plt.bar(dice, actual_dist_normal)
+plt.title("Adaptive Probability Distribution")
+plt.xticks(dice)
+# Now the fixed probability distribution
+plt.subplot(1, 3, 3)
+plt.bar(dice, actual_dist_theo_normal)
+plt.title("Fixed Probability Distribution")
+plt.xticks(dice)
 
 
 
