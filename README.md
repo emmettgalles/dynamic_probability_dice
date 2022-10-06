@@ -9,7 +9,7 @@ I welcome feedback, questions, or comments you may have about any file in this r
   - Description: current version of the script to roll dice
   - Current task: finding a way to make it so each roll is initiated by the user
   - To-do: not sure on the small steps yet, but the big picture is to put this on a simple website. This would be a good intro project for understanding very basic web design
-  - Issues: right now I have a very crude plotting setup to visualize what's going on after each iteration, it makes the script run very slow because it has to remake a plot each time
+  - Issues: the variable names and comments could be a little better, I'll clean it up to improve readability soon
   - General notes: this file name may change because it might just be a function that's called for a cleaner, more user-friendly script
 
 -- Emmett Galles
