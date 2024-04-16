@@ -4,7 +4,7 @@ Created on Mon Oct  3 13:00:28 2022
 
 @author: Emmett Galles
 """
-# This will be a file that stores functions we call in main.py.
+# This is a file that stores functions we call in main.py.
 #
 #
 
