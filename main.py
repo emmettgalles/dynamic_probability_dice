@@ -8,7 +8,7 @@ Created on Sun Jul 24 12:44:28 2022
 import copy, random
 import numpy as np
 import matplotlib.pyplot as plt
-from IPython import get_ipython
+# from IPython import get_ipython
 from additional_functions import merge, roll_dice
 
 ## === INITIATING VARIABLES ===
@@ -106,8 +106,8 @@ for i in range(80):
 actual_dist_normal = [d / sum(actual_dist) for d in actual_dist]
 # Create normalized actual_dist_theo
 actual_dist_theo_normal = [d / sum(actual_dist_theo) for d in actual_dist_theo]
-# Pop out the plot
-get_ipython().run_line_magic('matplotlib', 'qt')
+# # Pop out the plot
+# get_ipython().run_line_magic('matplotlib', 'qt')
 # Plot the theoretical distribution
 plt.subplot(1, 3, 1)
 plt.bar(dice, fixed_prob)
@@ -123,6 +123,8 @@ plt.subplot(1, 3, 3)
 plt.bar(dice, actual_dist_theo_normal)
 plt.title("Fixed Probability Distribution")
 plt.xticks(dice)
+# Show the plot
+plt.show()
 
 
 
