@@ -48,7 +48,7 @@ for i in range(num_rolls):
     actual_dist[roll[0]-2] += 1
     # Add the roll to the list of rolls, which just keeps track of what has been rolled
     rolls += roll
-    # We need to be a little crafty here. What we're looking to do is figure out what the limiting dice value is. In other words, we want to see how which dice value has had the most improbable occurences, as that is what we'll base our adaptive probability off of. We will find that value, then scale our fixed_prob distribution so that the probability will correspond with how the distribution should look assuming that the limiting dice value can be rolled one more time. For example, imagine that we roll a six, four, and three elevens. Obviously the three elevens is a little lopsided, so what we'll do is scale the fixed_prob distribution so that the probability of rolling an eleven is equal to four (for four rolls). To do this, we'll scale the entire fixed_prob list by 4 / [2 / 36]. Once we have all those numbers after scaling, we'll have to account for the fact of what the past rolls have been by subtracting off those rolls from the distribution. Let's start writing stuff and I'll explain along the way.
+    # We need to be a little crafty here. What we're looking to do is figure out what the limiting dice value is. In other words, we want to see how which dice value has had the most improbable occurences, as that is what we'll base our adaptive probability off of. We will find that value, then scale our fixed_prob distribution so that the probability will correspond with how the distribution should look. Let's start writing stuff and I'll explain along the way.
     #
     # We need to find the limiting value, and we do this by piecewise dividing actual_dist by fixed_prob and seeing which index returns the greatest number. In the event of a tie, we need to randomly select which number is chosen.
     scaled_dist = np.divide(actual_dist, fixed_prob)
@@ -58,14 +58,16 @@ for i in range(num_rolls):
     limiting_value_index = random.choice([i for i, x in enumerate(scaled_dist) if x == max(scaled_dist)])
     # We now scale fixed_prob by the largest number of scaled_dist. When we do this, we create a theoretically statistical accurate distribution that would result in the limiting value's number of rolls occuring. Once this is done, we then need to add another distribution, this other distribution being just fixed_prob to introduce more variability. This allows the probability of the next roll to have a nonzero chance of rolling the limiting value. Think about this extra added fixed_prob as increasing the interia of the adaptivity of the dice, it allows for nonzero probabilities of all rolls while still moving the adaptive probability toward the theoretical distribution.
     #
-    # First scale fixed_prob by the largest number of scaled_dist
+    # First scale fixed_prob by the largest number of scaled_dist. Note that scaled_dist[limiting_value_index] * fixed_prob[limiting_value_index] = actual_dist[limiting_value_index]. All other values in scaled_prob will be greater than or equal to actual_dist[limiting_value_index] by design.
     scaled_prob = [scaled_dist[limiting_value_index] * a for a in fixed_prob]
     # Now create the additional roll distribution to add on
     # additional_dist = [1 / fixed_prob[limiting_value_index] * b for b in fixed_prob]
     additional_dist = fixed_prob
     # Now sum them together
     scaled_prob_additional = np.add(scaled_prob, additional_dist)
-    # We now subtract off previous rolls
+    # We now subtract off previous rolls. Otherwise, we'd just have a big normal distribution. Subtracting off the previous rolls is what makes the next rolls statistically dependent on the previous rolls.
+    #
+    # This is a huge part of the script so let's explain it some more. Suppose on our first roll, we roll a 12. After all of our scaling, we have scaled_dist[limiting_value_index] = 36 (since a 12 was rolled). When we multiply each element of fixed_prob by 36, each element now represents how many times we'd have to roll each element in order for our most improbable occurrence (in this case, it's just our single roll of 12 so far) to fit in a normal distribution. This means that we'd need to roll one 2 (1/36 * 36), two 3s (2/36 * 36), etc. To account for what has already been rolled, we subtract away those rolls. In this case, we'd subtract away the single roll of 12 (since we only rolled the dice one time). In other words, after we subtract the previous rolls, we are looking at what is left to be rolled in order to create a normal distribution based on the most improbable occurrence. However, by construction of the scaled_prob, we would have a 0% chance of rolling the value that established the most improbable occurrence (in this case, a 12). This is why we choose to add fixed_prob to scaled_prob, to allow for a non-zero chance of rolling the improbable occurrence value. Another way to think about is that we need all the rolls that scaled_prob presents us, and adding in fixed_prob says that in addition to all those rolls, we're gonna roll the dice again and magically come up with fractional values for each dice value. Once all the scaled_prob rolls are rolled, what would be the best roll to maintain a normal distribution? It would be the magical roll that's equal to fixed_prob. By adding it in before all rolls of scaled_prob are rolled, it creates additional inertia so that our adaptive probability isn't completely lopsided and hell-bent on establishing a normal distribution to the point where it becomes too predictable.
     adaptive_scaled_prob_additional = np.subtract(scaled_prob_additional, actual_dist)
     # Now we normalize everything so it's nice to read
     adaptive_prob = [c / sum(adaptive_scaled_prob_additional) for c in adaptive_scaled_prob_additional]
@@ -116,19 +118,25 @@ actual_dist_theo_normal = [d / sum(actual_dist_theo) for d in actual_dist_theo]
 # get_ipython().run_line_magic('matplotlib', 'qt')
 # Plot the theoretical distribution
 plt.subplot(1, 3, 1)
+ax1 = plt.gca()
 plt.bar(dice, fixed_prob)
 plt.title("Theoretical Distribution")
 plt.xticks(dice)
+ax1.set_ylim([0, 0.18])
 # Now the adaptive probability distribution
 plt.subplot(1, 3, 2)
+ax2 = plt.gca()
 plt.bar(dice, actual_dist_normal)
 plt.title("Adaptive Probability Distribution")
 plt.xticks(dice)
+ax2.set_ylim([0, 0.18])
 # Now the fixed probability distribution
 plt.subplot(1, 3, 3)
+ax3 = plt.gca()
 plt.bar(dice, actual_dist_theo_normal)
 plt.title("Fixed Probability Distribution")
 plt.xticks(dice)
+ax3.set_ylim([0, 0.18])
 # Show the plot
 plt.show()
 
